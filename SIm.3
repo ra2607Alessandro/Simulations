@@ -1,0 +1,31 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import qutip as qt
+
+# System parameters
+N = 20  # Number of energy levels
+a = qt.destroy(N)
+w0 = 1.0  # Base frequency of the cavity
+eps = 0.1  # Modulation amplitude
+w_mod = 2 * w0  # Modulation frequency ~ 2w0 for resonance (DCE condition)
+
+# Time-dependent Hamiltonian
+def H_t(t, args):
+    return (1 + eps * np.cos(w_mod * t)) * a.dag() * a
+
+# Initial vacuum state
+psi0 = qt.basis(N, 0)
+
+# Time array
+tlist = np.linspace(0, 50, 500)
+
+# Solve time-dependent Schrödinger equation
+result = qt.mesolve(H_t, psi0, tlist, [], [a.dag() * a])
+
+# Plot photon number evolution
+plt.plot(tlist, result.expect[0])
+plt.xlabel('Time')
+plt.ylabel('⟨n⟩ (Photon Number)')
+plt.title('Dynamic Casimir Effect: Photon Generation from Vacuum')
+plt.grid(True)
+plt.show()
