@@ -1,0 +1,41 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from qutip import *
+
+# Parameters
+N = 10
+g = 0.15          # Stronger coupling
+w1 = 1.0          # Frequency of oscillator 1
+w2 = 1.2          # Slightly detuned frequency of oscillator 2
+tlist = np.linspace(0, 50, 500)
+
+# Operators
+a1 = tensor(destroy(N), qeye(N))
+a2 = tensor(qeye(N), destroy(N))
+
+# Hamiltonians
+H1 = w1 * a1.dag() * a1
+H2 = w2 * a2.dag() * a2
+Hint = g * (a1.dag() * a2 + a1 * a2.dag())  # Effective vacuum-mediated interaction
+
+H = H1 + H2 + Hint
+
+# Slight excitation in one mode to allow entanglement dynamics
+psi0 = tensor(basis(N, 1), basis(N, 0))
+
+# Time evolution
+result = mesolve(H, psi0, tlist, [], [])
+
+# Entanglement measure: von Neumann entropy of reduced density matrix
+entanglement = []
+for state in result.states:
+    rho1 = state.ptrace(0)
+    entanglement.append(entropy_vn(rho1))
+
+# Plot
+plt.plot(tlist, entanglement)
+plt.title("Entanglement Induced by Casimir Interaction")
+plt.xlabel("Time")
+plt.ylabel("Von Neumann Entropy (Subsystem A)")
+plt.grid(True)
+plt.show()
