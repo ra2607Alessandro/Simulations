@@ -1,0 +1,42 @@
+from qutip import *
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Simulation 7: Casimir-Induced Decoherence of Mirror Superposition
+
+# Parameters
+N = 10  # field dimension
+M = 10  # mirror dimension
+g = 0.1  # coupling strength
+tlist = np.linspace(0, 50, 200)
+
+# Operators
+a = tensor(destroy(N), qeye(M))
+b = tensor(qeye(N), destroy(M))
+
+# Hamiltonian: coupling + free energies
+H = a.dag() * a + b.dag() * b + g * (a + a.dag()) * (b + b.dag())
+
+# Initial state: field vacuum ⊗ mirror in superposition of ground and first excited state
+mirror_superposition = (basis(M, 0) + basis(M, 1)).unit()
+psi0 = tensor(basis(N, 0), mirror_superposition)
+
+# Time evolution
+result = mesolve(H, psi0, tlist)
+
+# Compute reduced density matrix of mirror by tracing out the field
+mirror_purity = []
+for state in result.states:
+    rho_m = state.ptrace(1)  # trace out field
+    purity = (rho_m * rho_m).tr().real
+    mirror_purity.append(purity)
+
+# Plot
+plt.figure(figsize=(6, 4))
+plt.plot(tlist, mirror_purity)
+plt.title("Decoherence of Mirror Superposition via Casimir Interaction")
+plt.xlabel("Time")
+plt.ylabel("Purity of Mirror State")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
