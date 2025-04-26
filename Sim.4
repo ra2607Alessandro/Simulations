@@ -1,0 +1,46 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import qutip as qt
+
+# System parameters
+N_field = 10       # Number of Fock states for the field
+N_mirror = 10      # Number of Fock states for the mirror
+omega_field = 1.0  # Frequency of field mode
+omega_mirror = 1.0 # Frequency of mirror oscillator
+g = 0.05           # Coupling strength
+
+# Operators
+a = qt.destroy(N_field)        # Field annihilation
+b = qt.destroy(N_mirror)       # Mirror annihilation
+
+# Tensor products
+a_op = qt.tensor(a, qt.qeye(N_mirror))
+b_op = qt.tensor(qt.qeye(N_field), b)
+
+# Hamiltonian components
+H_field = omega_field * a_op.dag() * a_op
+H_mirror = omega_mirror * b_op.dag() * b_op
+H_int = g * (a_op + a_op.dag()) * (b_op + b_op.dag())  # Position-position coupling
+
+# Total Hamiltonian
+H = H_field + H_mirror + H_int
+
+# Initial state: energized field, mirror in ground state
+alpha_field = 1.5
+psi0 = qt.tensor(qt.coherent(N_field, alpha_field), qt.basis(N_mirror, 0))
+
+# Time evolution
+t = np.linspace(0, 100, 200)
+
+# Solve Schrödinger equation
+result = qt.mesolve(H, psi0, t, [], [a_op.dag() * a_op, b_op.dag() * b_op])
+
+# Plot results
+plt.plot(t, result.expect[0], label="⟨n⟩ (Photon Number)")
+plt.plot(t, result.expect[1], label="⟨m⟩ (Mirror Excitation)")
+plt.xlabel("Time")
+plt.ylabel("Occupation Numbers")
+plt.title("Quantum Backreaction: Field and Mirror Dynamics")
+plt.legend()
+plt.grid(True)
+plt.show()
