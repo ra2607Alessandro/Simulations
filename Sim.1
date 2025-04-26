@@ -1,0 +1,24 @@
+import qutip as qt
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Create a harmonic oscillator (10 energy levels)
+a = qt.destroy(10)
+H = a.dag() * a  # Hamiltonian
+
+# Initial state: coherent state with average 2 photons
+psi0 = qt.coherent(10, 2)
+
+# Time array
+t = np.linspace(0, 10, 100)
+
+# Solve Schrödinger equation
+result = qt.mesolve(H, psi0, t, [], [a.dag()*a])
+
+# Plot expected photon number over time
+plt.plot(t, result.expect[0])
+plt.title("Photon Number Evolution (Quantum Vacuum Simulation)")
+plt.xlabel("Time")
+plt.ylabel("⟨n⟩")
+plt.grid(True)
+plt.show()
