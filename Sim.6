@@ -1,0 +1,50 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from qutip import *
+
+# Parameters
+gamma = 0.02               # Coupling strength
+omega_m = 1.0              # Mirror frequency
+omega_f = 1.0              # Field frequency
+N = 10                     # Hilbert space size
+tlist = np.linspace(0, 100, 500)
+
+# Operators for subsystems
+a = destroy(N)             # Field mode
+b = destroy(N)             # Mirror mode
+
+# Identity operators
+I_field = qeye(N)
+I_mirror = qeye(N)
+
+# Tensor operators
+a_op = tensor(a, I_mirror)
+b_op = tensor(I_field, b)
+
+# Hamiltonian
+H0 = omega_f * a_op.dag() * a_op + omega_m * b_op.dag() * b_op
+H_int = gamma * (a_op + a_op.dag()) * (b_op + b_op.dag())
+H = H0 + H_int
+
+# Initial state: field vacuum, mirror in coherent state
+alpha = 2.0
+psi0 = tensor(coherent(N, 0), coherent(N, alpha))
+
+# Time evolution
+result = mesolve(H, psi0, tlist, [], [a_op.dag()*a_op, b_op.dag()*b_op])
+
+# Extract observables
+field_photon = result.expect[0]
+mirror_energy = result.expect[1]
+
+# Plot results
+plt.figure(figsize=(7,5))
+plt.plot(tlist, mirror_energy, label="Mirror Energy (⟨nₘ⟩)", color='orange')
+plt.plot(tlist, field_photon, label="Field Excitations (⟨n𝑓⟩)", color='blue')
+plt.xlabel("Time")
+plt.ylabel("Occupation / Energy")
+plt.title("Quantum Friction via Casimir Interaction")
+plt.legend()
+plt.grid(True)
+plt.show()
+
